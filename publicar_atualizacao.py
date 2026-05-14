@@ -7,7 +7,7 @@ print("==================================================")
 print("  MONOLITHIIUN EXPLORER - CONFIGURADOR DE NUVEM   ")
 print("==================================================")
 
-# 1. Criar .gitignore
+# 1. .gitignore BLINDADO (Segurança Total)
 gitignore_content = """
 dist/
 build/
@@ -16,11 +16,19 @@ __pycache__/
 *.zip
 repo_info.json
 netlify_config.json
+*.mlhjson
+.env
 """
 with open(".gitignore", "w") as f:
     f.write(gitignore_content)
 
-# 2. Verificar se o Git está configurado
+# 2. Remover arquivos sensíveis do cache do Git (Se já foram subidos)
+print("[*] Removendo arquivos sensíveis do histórico do Git...")
+subprocess.run(["git", "rm", "--cached", "netlify_config.json"], shell=True, capture_output=True)
+subprocess.run(["git", "rm", "-r", "--cached", "*.mlhjson"], shell=True, capture_output=True)
+subprocess.run(["git", "rm", "-r", "--cached", "dist"], shell=True, capture_output=True)
+
+# 3. Verificar se o Git está configurado
 if not os.path.exists(".git"):
     print("[!] Pasta não inicializada. Configurando agora...")
     subprocess.run(["git", "init"], shell=True)
@@ -29,7 +37,7 @@ if not os.path.exists(".git"):
     subprocess.run(["git", "remote", "add", "origin", repo_url], shell=True)
     subprocess.run(["git", "branch", "-M", "main"], shell=True)
 
-# 3. Detectar Usuário e Repo
+# 4. Detectar Usuário e Repo
 try:
     remote_out = subprocess.check_output(["git", "remote", "-v"]).decode()
     match = re.search(r'github\.com[:/](.+?)/(.+?)(?:\.git|\s)', remote_out)
@@ -37,13 +45,12 @@ try:
         github_user, github_repo = match.groups()
         with open("repo_info.json", "w") as f:
             json.dump({"user": github_user, "repo": github_repo.strip()}, f)
-        print(f"[*] Repositório Detectado: {github_user}/{github_repo.strip()}")
     else:
-        print("[!] Erro: Não consegui detectar o usuário/repo.")
+        print("[!] Erro ao detectar repo.")
 except:
-    print("[!] Erro ao acessar o Git.")
+    pass
 
-# 4. Bumping Version
+# 5. Bumping Version
 current_version = "1.0.0"
 if os.path.exists("version.json"):
     with open("version.json", "r") as f:
@@ -56,20 +63,17 @@ new_version = ".".join(parts)
 with open("version.json", "w") as f:
     json.dump({"version": new_version}, f, indent=4)
 
-# 5. Enviar tudo (COM FORÇA)
-print(f"[*] Subindo Versão {new_version} para o GitHub...")
+# 6. Enviar tudo com Segurança
+print(f"[*] Subindo Versão {new_version} (MODO SEGURO)...")
 msg = input("O que há de novo? ")
-if not msg: msg = f"Auto-Update v{new_version}"
+if not msg: msg = f"Security Patch v{new_version}"
 
-subprocess.run(["git", "rm", "-r", "--cached", "dist"], shell=True, capture_output=True)
 subprocess.run(["git", "add", "."], shell=True)
 subprocess.run(["git", "commit", "-m", msg], shell=True)
-
-# O pulo do gato: o -f (force) resolve o erro de [rejected]
-print("[*] Sincronizando com o servidor (Force Push)...")
 subprocess.run(["git", "push", "-u", "-f", "origin", "main"], shell=True)
 
 print("==================================================")
-print(" SUCESSO! O GITHUB VAI COMPILAR SEU NAVEGADOR AGORA.")
+print(" SUCESSO! ARQUIVOS SENSÍVEIS REMOVIDOS DO GITHUB.")
+print(" LEMBRE-SE DE REVOGAR SEU TOKEN NO NETLIFY!")
 print("==================================================")
 os.system("pause")

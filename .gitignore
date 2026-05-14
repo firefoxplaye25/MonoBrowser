@@ -6,3 +6,5 @@ __pycache__/
 *.zip
 repo_info.json
 netlify_config.json
+*.mlhjson
+.env
