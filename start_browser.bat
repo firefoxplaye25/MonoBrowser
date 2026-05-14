@@ -1,0 +1,3 @@
+@echo off
+echo Starting MonoLithiiun Explorer...
+python main.py
