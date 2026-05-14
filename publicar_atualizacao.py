@@ -7,7 +7,7 @@ print("==================================================")
 print("  MONOLITHIIUN EXPLORER - CONFIGURADOR DE NUVEM   ")
 print("==================================================")
 
-# 1. Criar .gitignore para não subir lixo (dist, build, etc)
+# 1. Criar .gitignore
 gitignore_content = """
 dist/
 build/
@@ -25,7 +25,6 @@ if not os.path.exists(".git"):
     print("[!] Pasta não inicializada. Configurando agora...")
     subprocess.run(["git", "init"], shell=True)
     repo_url = input("Cole aqui o link do seu repositório GitHub: ").strip()
-    # Adiciona .git no final se não tiver
     if not repo_url.endswith(".git"): repo_url += ".git"
     subprocess.run(["git", "remote", "add", "origin", repo_url], shell=True)
     subprocess.run(["git", "branch", "-M", "main"], shell=True)
@@ -33,11 +32,9 @@ if not os.path.exists(".git"):
 # 3. Detectar Usuário e Repo
 try:
     remote_out = subprocess.check_output(["git", "remote", "-v"]).decode()
-    # Regex melhorada: funciona com ou sem .git
     match = re.search(r'github\.com[:/](.+?)/(.+?)(?:\.git|\s)', remote_out)
     if match:
         github_user, github_repo = match.groups()
-        # Salva para o navegador ler depois
         with open("repo_info.json", "w") as f:
             json.dump({"user": github_user, "repo": github_repo.strip()}, f)
         print(f"[*] Repositório Detectado: {github_user}/{github_repo.strip()}")
@@ -59,19 +56,20 @@ new_version = ".".join(parts)
 with open("version.json", "w") as f:
     json.dump({"version": new_version}, f, indent=4)
 
-# 5. Enviar tudo (Limpando o lixo antes)
+# 5. Enviar tudo (COM FORÇA)
 print(f"[*] Subindo Versão {new_version} para o GitHub...")
 msg = input("O que há de novo? ")
 if not msg: msg = f"Auto-Update v{new_version}"
 
-# Reset para remover a pasta dist do que vai ser enviado
 subprocess.run(["git", "rm", "-r", "--cached", "dist"], shell=True, capture_output=True)
 subprocess.run(["git", "add", "."], shell=True)
 subprocess.run(["git", "commit", "-m", msg], shell=True)
-subprocess.run(["git", "push", "-u", "origin", "main"], shell=True)
+
+# O pulo do gato: o -f (force) resolve o erro de [rejected]
+print("[*] Sincronizando com o servidor (Force Push)...")
+subprocess.run(["git", "push", "-u", "-f", "origin", "main"], shell=True)
 
 print("==================================================")
 print(" SUCESSO! O GITHUB VAI COMPILAR SEU NAVEGADOR AGORA.")
-print(" Verifique a aba 'Actions' no seu repositório.")
 print("==================================================")
 os.system("pause")
